@@ -14,11 +14,14 @@ db.once('open', function(){
 mongoose.connect('mongodb://localhost/maze', { useNewUrlParser: true });
 
 var memberRouter = require('./routes/member');
+var problemRouter = require('./routes/problem');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.use('/images', express.static('public'));
 app.use('/api/member', memberRouter);
+app.use('/api/problem', problemRouter);
 
 var port = process.env.PORT || 19191;
 
