@@ -39,9 +39,6 @@ router.get('/', function(req, res){
 });
 
 router.post('/', upload.single('file'), function(req, res){
-    console.log(req.body);
-    console.log(req.file);
-
     var problem = new Problem();
     problem.num = Number(req.body.num);
     problem.answer = req.body.answer;
@@ -70,7 +67,7 @@ router.post('/', upload.single('file'), function(req, res){
 
 router.delete('/:fileName', function(req, res){
     const fileURL = "/images/problem/" + req.params.fileName;
-    console.log(req.fileURL);
+
     Problem.findOneAndDelete({ fileURL: fileURL },
         function(err, doc) {
             fs.exists(doc.filePath, function(exists){
