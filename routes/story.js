@@ -5,6 +5,14 @@ var crypto = require('crypto');
 var path = require('path');
 var fs = require('fs');
 
+function deleteFile(filePath){
+    fs.exists(filePath, function (exists) {
+        if (exists) {
+            fs.unlink(filePath);
+        }
+    });
+}
+
 const upload = multer({
    storage: multer.diskStorage({
        destination: function (req, file, cb){
@@ -13,8 +21,6 @@ const upload = multer({
        filename: function (req, file, cb){
            crypto.pseudoRandomBytes(16, function (err, raw){
               if (err) { return cb(err); }
-               console.log(file.originalname);
-               console.log(path.extname(file.originalname));
               cb(null, raw.toString('hex') + path.extname(file.originalname));
            });
        },
@@ -22,65 +28,82 @@ const upload = multer({
 });
 
 var Story = require('../models/story');
+var validateAdmin = require('../routes/login').validateAdmin;
 
-router.get('/', function(req, res){
-    Story.find({}).sort({ classType: 1, num: 1 }).exec(function(err, stories){
-       if (err){
-           console.log(err);
-           res.json({
-               result: 0,
-               error: err.errmsg
-           });
-           return;
-       }
-        res.json({
-            result: 1,
-            stories: stories
-        });
-    });
-});
-
-router.post('/', upload.single('file'), function(req, res){
-    var story = new Story();
-    story.num = Number(req.body.num);
-    story.classType = req.body.classType;
-    story.fileURL = '/images/story/' + req.file.filename;
-    story.filePath = req.file.path;
-
-    story.save(function(err){
-        if(err){
-            fs.exists(req.file.path, function(exists){
-                if (exists) { fs.unlink(req.file.path); }
-            });
-
-            console.error(err);
-            res.json({
-                result: 0,
-                error: err.errmsg
-            });
-            return;
-        }
-        res.json({result: 1});
-    });
-});
-
-router.delete('/:fileName', function(req, res){
-    const fileURL = "/images/story/" + req.params.fileName;
-
-    Story.findOneAndDelete({ fileURL: fileURL },
-        function(err, doc){
-            fs.exists(doc.filePath, function(exists){
-                if (exists) { fs.unlink(doc.filePath); }
-            });
-
+router.get('/:id/:pwd', function(req, res){
+    if (validateAdmin(req.params.id, req.params.pwd)) {
+        Story.find({}).sort({classType: 1, num: 1}).exec(function (err, stories) {
             if (err) {
-                console.error(err);
-                res.status(500).json({
+                //console.error(err);
+                res.json({
+                    result: 0,
                     error: err.errmsg
                 });
                 return;
             }
-            res.status(204).end();
+            res.json({
+                result: 1,
+                stories: stories
+            });
+        });
+        return;
+    }
+    res.json({
+        result: 0,
+        error: 'user validating failed'
+    });
+});
+
+router.post('/:id/:pwd', upload.single('file'), function(req, res){
+    if (validateAdmin(req.params.id, req.params.pwd)) {
+        var story = new Story();
+        story.num = Number(req.body.num);
+        story.classType = req.body.classType;
+        story.fileURL = '/images/story/' + req.file.filename;
+        story.filePath = req.file.path;
+
+        story.save(function (err) {
+            if (err) {
+                //console.error(err);
+                deleteFile(req.file.path);
+                res.json({
+                    result: 0,
+                    error: err.errmsg
+                });
+                return;
+            }
+            res.json({result: 1});
+        });
+        return;
+    }
+    deleteFile(req.file.path);
+    res.json({
+        result: 0,
+        error: 'user validating failed'
+    });
+});
+
+router.delete('/:id/:pwd/:fileName', function(req, res){
+    if (validateAdmin(req.params.id, req.params.pwd)) {
+        const fileURL = "/images/story/" + req.params.fileName;
+
+        Story.findOneAndDelete({fileURL: fileURL},
+            function (err, doc) {
+                deleteFile(doc.filePath);
+                if (err) {
+                    //console.error(err);
+                    res.status(500).json({
+                        error: err.errmsg
+                    });
+                    return;
+                }
+                res.status(204).end();
+        });
+        return;
+    }
+    res.json({
+        result: 0,
+        error: 'user validating failed'
     });
 });
 
