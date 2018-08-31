@@ -17,7 +17,10 @@ function validateUser(id, pwd, next){
             //console.error(err);
             next(false);
         }
-        if (member.length != 1) { return false; }
+        if (member.length != 1) {
+            next(false);
+            return;
+        }
         next(true);
     });
 }
