@@ -13,21 +13,21 @@ db.once('open', function(){
 
 mongoose.connect('mongodb://localhost/maze', { useNewUrlParser: true });
 
-var memberRouter = require('./routes/member');
-var problemRouter = require('./routes/problem');
-var storyRouter = require('./routes/story');
-var progressRouter = require('./routes/progress');
 var loginRouter = require('./routes/login').router;
+var memberRouter = require('./routes/admin/member');
+var problemRouter = require('./routes/admin/problem');
+var storyRouter = require('./routes/admin/story');
+var progressRouter = require('./routes/admin/progress');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use('/images', express.static('public'));
-app.use('/api/member', memberRouter);
-app.use('/api/problem', problemRouter);
-app.use('/api/story', storyRouter);
-app.use('/api/progress', progressRouter);
 app.use('/api/login', loginRouter);
+app.use('/api/admin/member', memberRouter);
+app.use('/api/admin/problem', problemRouter);
+app.use('/api/admin/story', storyRouter);
+app.use('/api/admin/progress', progressRouter);
 
 var port = process.env.PORT || 19191;
 

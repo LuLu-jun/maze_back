@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var Progress = require('../models/progress');
-var validateAdmin = require('../routes/login').validateAdmin;
+var Progress = require('../../models/progress');
+var validateAdmin = require('../login').validateAdmin;
 
 router.get('/:id/:pwd', function(req, res, next){
     if (validateAdmin(req.params.id, req.params.pwd)) {

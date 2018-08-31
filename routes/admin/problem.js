@@ -27,8 +27,8 @@ const upload = multer({
     }),
 });
 
-var Problem = require('../models/problem');
-var validateAdmin = require('../routes/login').validateAdmin;
+var Problem = require('../../models/problem');
+var validateAdmin = require('../login').validateAdmin;
 
 router.get('/:id/:pwd', function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
