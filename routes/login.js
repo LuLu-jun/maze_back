@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var Member = require('../models/member');
+var Progress = require('../models/progress');
 
 function validateAdmin(id, pwd){
     if (id == 'admin' && pwd == 'admin195828') {
@@ -16,12 +17,29 @@ function validateUser(id, pwd, next){
         if (err){
             //console.error(err);
             next(false);
+            return;
         }
         if (member.length != 1) {
             next(false);
             return;
         }
         next(true);
+    });
+}
+
+function validateAndGetProgress(id, pwd, next){
+    Member.find({ id: id, pwd: pwd }).exec(function(err, member){
+        if (err){ next (undefined); }
+        else if (member.length != 1){ next (undefined); }
+        else{
+            Progress.find({ classNum: member[0].classNum }).exec(function(err, progress){
+                if (err) { next (undefined); }
+                else if (progress.length != 1) { next (undefined); }
+                else{
+                    next (progress[0]);
+                }
+            });
+        }
     });
 }
 
@@ -56,4 +74,5 @@ module.exports = {
     router: router,
     validateAdmin: validateAdmin,
     validateUser: validateUser,
+    validateAndGetProgress: validateAndGetProgress,
 };

@@ -20,7 +20,7 @@ router.get('/:id/:pwd', function(req, res, next) {
                 result: 1,
                 members: members
             });
-        })
+        });
         return;
     }
     res.json({
@@ -46,6 +46,10 @@ router.post('/:id/:pwd', function(req, res){
             var progress = new Progress();
             progress.classNum = req.body.classNum;
             progress.warningNum = 0;
+            progress.recentPage = {
+                type : 'story',
+                number : 1
+            };
             progress.progress = [];
             for (var i=0; i<10; i++){
                 progress.progress.push(
