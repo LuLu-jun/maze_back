@@ -12,4 +12,3 @@ var progressSchema = new Schema({
 });
 
 module.exports = mongoose.model('progress', progressSchema);
-

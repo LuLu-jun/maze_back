@@ -31,7 +31,20 @@ router.get('/:id/:pwd', function(req, res, next) {
 
 router.post('/:id/:pwd', function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)){
-        var member = new Member(req.body);
+        var member = new Member();
+        member.classNum = req.body.classNum;
+        member.id = req.body.id;
+        member.pwd = req.body.pwd;
+        member.classType = req.body.classType;
+        member.problemType = req.body.problemType;
+        member.hintCodes = [];
+
+        for (var i=0; i<3;i ++){
+            member.hintCodes.push({
+                code: req.body.hintCodes[i],
+                used: false
+            });
+        }
 
         member.save(function(err){
             if(err){
@@ -53,7 +66,7 @@ router.post('/:id/:pwd', function(req, res){
             progress.progress = [];
             for (var i=0; i<10; i++){
                 progress.progress.push(
-                    { begin: -1, end: -1 }
+                    { begin: -1, end: -1, hints: [false, false, false] }
                 );
             }
 

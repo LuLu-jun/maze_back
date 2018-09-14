@@ -29,14 +29,14 @@ function validateUser(id, pwd, next){
 
 function validateAndGetProgress(id, pwd, next){
     Member.find({ id: id, pwd: pwd }).exec(function(err, member){
-        if (err){ next (undefined); }
-        else if (member.length != 1){ next (undefined); }
+        if (err){ next (undefined, undefined); }
+        else if (member.length != 1){ next (undefined, undefined); }
         else{
             Progress.find({ classNum: member[0].classNum }).exec(function(err, progress){
-                if (err) { next (undefined); }
-                else if (progress.length != 1) { next (undefined); }
+                if (err) { next (undefined, undefined); }
+                else if (progress.length != 1) { next (undefined, undefined); }
                 else{
-                    next (progress[0]);
+                    next (progress[0], member[0]);
                 }
             });
         }
@@ -74,5 +74,5 @@ module.exports = {
     router: router,
     validateAdmin: validateAdmin,
     validateUser: validateUser,
-    validateAndGetProgress: validateAndGetProgress,
+    validateAndGetProgress: validateAndGetProgress
 };
