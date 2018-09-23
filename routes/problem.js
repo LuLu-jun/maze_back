@@ -3,7 +3,7 @@ var router = express.Router();
 
 var Problem = require('../models/problem');
 var validateGetProgress = require('./login').validateAndGetProgress;
-var comparePage = require('./next').comparePage;
+var allowPage = require('./next').allowPage;
 
 router.get('/:id/:pwd/:number', function(req, res, next){
     validateGetProgress(req.params.id, req.params.pwd,
@@ -20,7 +20,7 @@ router.get('/:id/:pwd/:number', function(req, res, next){
                 type: 'problem',
                 number: Number(req.params.number)
             };
-            if (comparePage(requestPage, progress.recentPage) < 0){
+            if (!allowPage(requestPage, progress)){
                 res.json({
                     result: 0,
                     error: 'invalidate request'
@@ -44,10 +44,13 @@ router.get('/:id/:pwd/:number', function(req, res, next){
                         });
                     }
                     else{
+                        var end = progress.problems[problemNum - 1].end;
+                        if (end == -1) { end = undefined }
                         res.json({
                             result: 1,
                             imageURL: problem[0].fileURL,
-                            begin: progress.progress[problemNum - 1].begin
+                            begin: progress.problems[problemNum - 1].begin,
+                            end: end
                         });
                     }
                 });

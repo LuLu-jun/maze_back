@@ -4,10 +4,12 @@ var Schema = mongoose.Schema;
 var progressSchema = new Schema({
     classNum: { type: Number, required: true, unique: true },
     warningNum: { type: Number, required: true },
-    progress: { type: Array, required: true },
+    problems: { type: Array, required: true }, //
+    stories: { type: Array, required: true }, //save type for story number
+    branches: { type: Array, required: true }, //save each branch's id
     recentPage: {
-        type: { type: String, enum: ['problem', 'story'], required: true },
-        number: { type: Number, required: true }
+        type: { type: String, enum: ['problem', 'story', 'branch'], required: true },
+        number: { type: Number, required: true }, //number means index of each type(problem. story, branch)
     }
 });
 

@@ -4,20 +4,26 @@ var router = express.Router();
 var validateAndGetProgress = require('./login').validateAndGetProgress;
 var Problem = require('../models/problem');
 var Progress = require('../models/progress');
+var Branch = require('../models/branch');
+var Member = require('../models/member');
 
 const firstHintTime = 10, secondHintTime = 20;
 
-function comparePage(a, b){ // a>b : -1, a<b : 1, a==b : 0
-    if (a.number != b.number){
-        if (a.number > b.number) { return -1; }
-        else { return 1; }
+function allowPage(requestPage, progress){
+    const type = requestPage.type;
+    const number = requestPage.number;
+
+    if (type == 'problem'){
+        if (progress.problems[number - 1].begin == -1) { return false; }
+        return true;
     }
-    else if (a.type == b.type){
-        return 0;
+    else if (type == 'story'){
+        if (progress.stories[number - 1] == -1) { return false; }
+        return true;
     }
     else{
-        if (a.type == 'story') { return 1; }
-        else { return -1; }
+        if (progress.branches[number - 1].storyNumber == -1) { return false; }
+        return true;
     }
 }
 
@@ -44,55 +50,52 @@ function compareAnswer(num, classType, problemType, inputAnswer, next){
         });
 }
 
-function getNextPage(page){
+function pageAfterStory(page){
     var nextPage = { type: undefined, number: undefined };
     if (page.type == 'story'){
         nextPage.type = 'problem';
         nextPage.number = page.number;
     }
-    else{
+    return nextPage;
+}
+
+function pageAfterProblem(page, beforeStoryType, classType, next){
+    var nextPage = { type: undefined, number: undefined, id: undefined };
+    if (page.type == 'problem'){
+        const beforeStory = page.number.toString() + "(" + beforeStoryType.toString() + ")";
+        Branch.find({ beforeStory: beforeStory, classType: classType }).exec(function(err, branch){
+            if (err) {
+                console.error("what the fuck");
+                return;
+            }
+            else if (branch.length != 1) { // No branch case
+                nextPage.type = 'story';
+                nextPage.number = page.number + 1;
+            }
+            else{
+                nextPage.type = 'branch';
+                nextPage.id = branch[0]._id;
+            }
+            next(nextPage);
+        });
+    }
+}
+
+function pageAfterBranch(page, branchStoryNum){
+    var nextPage = { type: undefined, number: undefined };
+    if (page.type == 'branch'){
         nextPage.type = 'story';
-        nextPage.number = page.number + 1;
+        nextPage.number = branchStoryNum + 0.5;
     }
     return nextPage;
 }
 
-function getUpdateProgress(oldProgress, updateIndex, type){ // type 0 needs new begin, 1 needs new end
-    var progress = [];
-    for (var i=0; i<oldProgress.length; i++){
-        if (i != updateIndex) { progress.push(oldProgress[i]); }
-        else {
-            if (type == 0) {
-                progress.push(
-                    { begin: new Date().getTime(), end: -1, hints: oldProgress[i].hints }
-                );
-            }
-            else{
-                progress.push(
-                    { begin: oldProgress[i].begin, end: new Date().getTime(), hints: oldProgress[i].hints }
-                );
-            }
-        }
-    }
-    return progress;
-}
-
-function getUpdateHintCodes(oldHintCodes, updateIndex){
-    var hintCodes = [];
-    for (var i=0; i<oldHintCodes.length; i++){
-        if (i != updateIndex) { hintCodes.push(oldHintCodes[i]); }
-        else {
-            hintCodes.push({
-                code: oldHintCodes[i].code,
-                used: true
-            });
-        }
-    }
-    return hintCodes;
+function extractType(str){
+    return Number(str.split("(")[1].split(")")[0]);
 }
 
 function updateProgressHint3(progress, problemNum){
-    progress.progress[problemNum - 1].hints[2] = true;
+    progress.problems[problemNum - 1].hints[2] = true;
 
     Progress.update({ _id: progress._id }, { $set: progress }, function (err, output){
         if (err) {
@@ -100,7 +103,7 @@ function updateProgressHint3(progress, problemNum){
             console.error(err);
         }
         if (output.n != 1){
-            console.error('There is no matched progress');
+            console.error('Number of matched progress is not 1 !!');
         }
     });
 }
@@ -153,32 +156,34 @@ router.post('/:id/:pwd', function(req, res){
                 return;
             }
 
-            const recentPage = progress.recentPage;
             const nowPage = {
                 type: req.body.type,
                 number: req.body.number
             };
-            const result = comparePage(recentPage, nowPage); //1: recentPage < nowPage
-            if (result == 1){
+            const validRequest = allowPage(nowPage, progress);
+            if (!validRequest){
                 res.json({
                     result: 0,
                     error: 'invalidate request'
                 });
                 return;
             }
-            if (recentPage.type == 'story') {
-                if (result == -1){
+            if (nowPage.type == 'story') {
+                const nextPage = pageAfterStory(nowPage);
+
+                if (progress.problems[nextPage.number - 1].begin != -1){ //visited story case -> no need for setting problem progress
                     res.json({
-                        result: 1
+                        result: 1,
+                        nextPage: nextPage
                     });
                     return;
                 }
-                const nextPage = getNextPage(recentPage);
-                progress.recentPage = nextPage;
-                progress.progress = getUpdateProgress(progress.progress, nextPage.number - 1, 0);
 
-                progress.save(function (err) {
-                    if (err) {
+                progress.recentPage = nextPage;
+                progress.problems[nextPage.number - 1].begin = new Date().getTime();
+
+                Progress.update({ _id: progress._id }, { $set: progress }, function(err, output){
+                    if (err){
                         console.error(err);
                         res.json({
                             result: 0,
@@ -186,10 +191,21 @@ router.post('/:id/:pwd', function(req, res){
                         });
                         return;
                     }
-                    res.json({result: 1});
+                    if (output.n != 1) {
+                        console.error('Number of matched progress is not 1 !!');
+                        res.json({
+                            result: 0,
+                            error: 'Number of matched progress is not 1 !!'
+                        });
+                        return;
+                    }
+                    res.json({
+                        result: 1,
+                        nextPage: nextPage
+                    });
                 });
             }
-            else{ //problem은 result가 -1이든 0이든 상관없이 답 맞아야 넘겨줌
+            else if (nowPage.type == 'problem'){ //problem은 result가 -1이든 0이든 상관없이 답 맞아야 넘겨줌
                 const inputAnswer = req.body.answer;
 
                 var index = -1;
@@ -199,9 +215,9 @@ router.post('/:id/:pwd', function(req, res){
                         break;
                     }
                 }
-                if (index != -1 && progress.progress[nowPage.number - 1].hints[2] == false){
-                    member.hintCodes = getUpdateHintCodes(member.hintCodes, index);
-                    member.save(function (err){
+                if (index != -1 && progress.problems[nowPage.number - 1].hints[2] == false){
+                    member.hintCodes[index].used = true;
+                    Member.update({ _id: member._id }, { $set: member }, function(err, output){
                         if (err) {
                             console.error(err);
                             res.json({
@@ -210,6 +226,15 @@ router.post('/:id/:pwd', function(req, res){
                             });
                             return;
                         }
+                        if (output.n != 1){
+                            console.error('Number of matched member is not 1 !!');
+                            res.json({
+                                result: 0,
+                                error: 'Number of matched member is not 1 !!'
+                            });
+                            return;
+                        }
+
                         updateProgressHint3(progress, req.body.number);
                         getHint3(nowPage.number, member.classType, member.problemType[nowPage.number - 1], function(hint){
                             if (hint == false) {
@@ -247,26 +272,147 @@ router.post('/:id/:pwd', function(req, res){
                                 if (err){
                                     console.error(err);
                                 }
-                                if (output.n != 1) { console.error('There is no matched progress'); }
+                                if (output.n != 1) { console.error('Number of matched progress is not 1 !!'); }
                             });
                         }
                         else{
-                            const nextPage = getNextPage(recentPage);
-                            progress.recentPage = nextPage;
-                            progress.progress = getUpdateProgress(progress.progress, nextPage.number - 2, 1);
-                            progress.save(function (err) {
-                                if (err) {
-                                    console.error(err);
-                                    res.json({
-                                        result: 0,
-                                        error: err.errmsg
-                                    });
-                                    return;
+                            if (progress.problems[nowPage.number - 1].end != -1){ //visited problem
+                                pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function(nextPage){
+                                    if (nextPage.type == 'story') {
+                                        res.json({
+                                            result: 1,
+                                            nextPage: nextPage
+                                        });
+                                    }
+                                    else{
+                                        for (var i=0; i<progress.branches.length; i++){
+                                            if (progress.branches[i].storyNumber == nowPage.number + 0.5){
+                                                nextPage.number = i + 1;
+                                                res.json({
+                                                    result: 1,
+                                                    nextPage: nextPage
+                                                });
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                                return;
+                            }
+                            progress.problems[nowPage.number - 1].end = new Date().getTime();
+
+                            pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function (nextPage){
+                                if (nextPage.type == 'story'){
+                                    progress.recentPage = nextPage;
+                                    progress.stories[nextPage.number - 1] = progress.stories[nowPage.number - 1];
                                 }
-                                res.json({result: 1});
+                                else{ //next Page is branch
+                                    for (var i=0; i<progress.branches.length; i++){
+                                        if (progress.branches[i].storyNumber == -1){
+                                            progress.branches[i] = { id: nextPage.id, storyNumber: nowPage.number + 0.5 };
+                                            progress.recentPage = { type: 'branch', number: i+1 };
+                                            nextPage.number = i + 1;
+                                            break;
+                                        }
+                                    }
+                                }
+                                Progress.update({ _id: progress._id }, { $set: progress }, function(err, output){
+                                    if (err){
+                                        console.error(err);
+                                        res.json({
+                                            result: 0,
+                                            error: err.errmsg
+                                        });
+                                        return;
+                                    }
+                                    if (output.n != 1) {
+                                        console.error('Number of matched progress is not 1 !!');
+                                        res.json({
+                                            result: 0,
+                                            error: 'Number of matched progress is not 1 !!'
+                                        });
+                                        return;
+                                    }
+                                    res.json({
+                                        result: 1,
+                                        nextPage: nextPage
+                                    });
+                                });
                             });
                         }
                     });
+            }
+            else{ //now page is branch
+                const inputDecision = req.body.decision;
+                const branchStoryNum = progress.branches[nowPage.number - 1].storyNumber;
+                const nextPage = pageAfterBranch(nowPage, branchStoryNum);
+
+                if (!(inputDecision == "yes" || inputDecision == "no")){
+                    res.json({
+                        result: 0
+                    });
+                    return;
+                }
+
+                Branch.find({ _id: progress.branches[nowPage.number -1].id }).exec(function(err, branch){
+                    if (err){
+                        console.error("what the fuck");
+                        return;
+                    }
+                    else if (branch.length != 1){
+                        console.error("what the fuck");
+                        return;
+                    }
+                    else {
+                        const yesStoryType = extractType(branch[0].yesStory);
+                        const noStoryType = extractType(branch[0].noStory);
+
+                        if (progress.stories[branchStoryNum - 0.5] != -1){ // visited branch
+                            const pastDecision = progress.stories[branchStoryNum - 0.5] == yesStoryType;
+
+                            if ((inputDecision =="yes") != pastDecision){ //pastDecision != inputDecision
+                                res.json({
+                                    result: 0,
+                                    error: 'You already set other path !!'
+                                });
+                            }
+                            else{
+                                res.json({
+                                    result: 1,
+                                    nextPage: nextPage
+                                });
+                            }
+                            return;
+                        }
+
+                        progress.recentPage = nextPage;
+                        if (inputDecision == "yes") { progress.stories[nextPage.number - 1] = yesStoryType; }
+                        else { progress.stories[nextPage.number - 1] = noStoryType; }
+
+                        Progress.update({ _id: progress._id}, { $set: progress }, function (err, output){
+                            if (err){
+                                console.error(err);
+                                res.json({
+                                    result: 0,
+                                    error: err.errmsg
+                                });
+                                return;
+                            }
+                            if (output.n != 1) {
+                                console.error('Number of matched progress is not 1 !!');
+                                res.json({
+                                    result: 0,
+                                    error: 'Number of matched progress is not 1 !!'
+                                });
+                                return;
+                            }
+                            res.json({
+                                result: 1,
+                                nextPage: nextPage
+                            });
+                        });
+                    }
+                });
             }
         }
     );
@@ -276,16 +422,21 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
     validateAndGetProgress(req.params.id, req.params.pwd,
         function(progress, member){
             var problemNum = req.params.number;
-            var timeDiff = Math.ceil((new Date().getTime() - progress.progress[problemNum - 1].begin) / 1000);
-            var progressHints = progress.progress[problemNum - 1].hints;
+            if (progress.problems[problemNum - 1].end == -1) {
+                var timeDiff = Math.ceil((new Date().getTime() - progress.problems[problemNum - 1].begin) / 1000);
+            }
+            else{
+                var timeDiff = Math.ceil((progress.problems[problemNum - 1].end - progress.problems[problemNum - 1].begin) / 1000);
+            }
+            var progressHints = progress.problems[problemNum - 1].hints;
 
             if (timeDiff >= firstHintTime && !progressHints[0]) { //need update progress hint
-                progress.progress[problemNum - 1].hints[0] = true;
+                progress.problems[problemNum - 1].hints[0] = true;
                 progressHints[0] = true;
             }
 
             if (timeDiff >= secondHintTime && !progressHints[1]) {
-                progress.progress[problemNum - 1].hints[1] = true;
+                progress.problems[problemNum - 1].hints[1] = true;
                 progressHints[1] = true;
             }
 
@@ -316,7 +467,7 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
                if (err){
                    console.error(err);
                }
-               if (output.n != 1) { console.error('There is no matched progress'); }
+               if (output.n != 1) { console.error('Number of matched progress is not 1 !!'); }
             });
         }
     );
@@ -324,5 +475,5 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
 
 module.exports = {
     router: router,
-    comparePage: comparePage
+    allowPage: allowPage
 };

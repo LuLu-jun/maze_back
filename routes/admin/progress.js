@@ -61,12 +61,24 @@ router.get('/reset/:id/:pwd', function(req, res, next){
                     type : 'story',
                     number : 1
                 };
-                progress.progress = [];
-                for (var i=0; i<10; i++){
-                    progress.progress.push(
+                progress.problems = [];
+                for (var j=0; j<10; j++){
+                    progress.problems.push(
                         { begin: -1, end: -1, hints: [false, false, false] }
                     );
                 }
+                progress.stories = [];
+                for (var j=0; j<10; j++){
+                    progress.stories.push(-1);
+                }
+                progress.stories[0] = 1;
+                progress.branches = [];
+                for (var j=0; j<5; j++){
+                    progress.branches.push(
+                        { id: "", storyNumber: -1 }
+                    );
+                }
+
                 progress.save(function (err) {
                     if (err) { error = err.errmsg; }
                 });

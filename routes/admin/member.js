@@ -63,10 +63,21 @@ router.post('/:id/:pwd', function(req, res){
                 type : 'story',
                 number : 1
             };
-            progress.progress = [];
+            progress.problems = [];
             for (var i=0; i<10; i++){
-                progress.progress.push(
+                progress.problems.push(
                     { begin: -1, end: -1, hints: [false, false, false] }
+                );
+            }
+            progress.stories = [];
+            for (var i=0; i<10; i++){
+                progress.stories.push(-1);
+            }
+            progress.stories[0] = 1;
+            progress.branches = [];
+            for (var i=0; i<5; i++){
+                progress.branches.push(
+                    { id: "", storyNumber: -1 }
                 );
             }
 

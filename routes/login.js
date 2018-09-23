@@ -59,7 +59,6 @@ router.post('/', function(req, res, next){
                     result: 1,
                     isAdmin: false,
                     recentPage: -1,
-                    // TODO : get recent page
                 });
                 return;
             }

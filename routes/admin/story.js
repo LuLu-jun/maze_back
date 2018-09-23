@@ -32,7 +32,7 @@ var validateAdmin = require('../login').validateAdmin;
 
 router.get('/:id/:pwd', function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
-        Story.find({}).sort({classType: 1, num: 1}).exec(function (err, stories) {
+        Story.find({}).sort({classType: 1, num: 1, storyType: 1}).exec(function (err, stories) {
             if (err) {
                 //console.error(err);
                 res.json({
@@ -59,6 +59,7 @@ router.post('/:id/:pwd', upload.single('file'), function(req, res){
         var story = new Story();
         story.num = Number(req.body.num);
         story.classType = req.body.classType;
+        story.storyType = req.body.storyType;
         story.fileURL = '/images/story/' + req.file.filename;
         story.filePath = req.file.path;
 

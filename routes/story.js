@@ -3,7 +3,7 @@ var router = express.Router();
 
 var Story = require('../models/story');
 var validateAndGetProgress = require('./login').validateAndGetProgress;
-var comparePage = require('./next').comparePage;
+var allowPage = require('./next').allowPage;
 
 router.get('/:id/:pwd/:number', function (req, res, next){
     validateAndGetProgress(req.params.id, req.params.pwd,
@@ -20,7 +20,7 @@ router.get('/:id/:pwd/:number', function (req, res, next){
                 type: 'story',
                 number: req.params.number
             };
-            if (comparePage(requestPage, progress.recentPage) < 0){
+            if (!allowPage(requestPage, progress)){
                 res.json({
                     result: 0,
                     error: 'invalidate request'
@@ -28,7 +28,9 @@ router.get('/:id/:pwd/:number', function (req, res, next){
                 return;
             }
 
-            Story.find({ num: Number(req.params.number), classType: member.classType })
+            const storyType = progress.stories[requestPage.number - 1];
+
+            Story.find({ num: Number(req.params.number), classType: member.classType, storyType: storyType})
                 .exec(function(err, story) {
                     if (err){
                         res.json({
