@@ -56,6 +56,16 @@ router.get('/:id/:pwd', function(req, res){
 
 router.post('/:id/:pwd', upload.single('file'), function(req, res){
    if (validateAdmin(req.params.id, req.params.pwd)){
+       if (req.body.num == undefined || req.body.classType == undefined || req.body.beforeStory == undefined
+       || req.body.yesStory == undefined || req.body.noStory == undefined || req.file.filename == undefined
+       || req.file.path == undefined){
+           res.json({
+               result: 0,
+               error: 'Not enough request'
+           });
+           return;
+       }
+
        var branch = new Branch();
        branch.num = Number(req.body.num);
        branch.classType = req.body.classType;

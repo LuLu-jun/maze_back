@@ -156,6 +156,14 @@ router.post('/:id/:pwd', function(req, res){
                 return;
             }
 
+            if (req.body.type == undefined || req.body.number == undefined){
+                res.json({
+                    result: 0,
+                    error: 'Not enough request'
+                });
+                return;
+            }
+
             const nowPage = {
                 type: req.body.type,
                 number: req.body.number
@@ -206,6 +214,14 @@ router.post('/:id/:pwd', function(req, res){
                 });
             }
             else if (nowPage.type == 'problem'){ //problem은 result가 -1이든 0이든 상관없이 답 맞아야 넘겨줌
+                if (req.body.answer == undefined){
+                    res.json({
+                        result: 0,
+                        error: 'Not enough request'
+                    });
+                    return;
+                }
+
                 const inputAnswer = req.body.answer;
 
                 var index = -1;
@@ -343,6 +359,14 @@ router.post('/:id/:pwd', function(req, res){
                     });
             }
             else{ //now page is branch
+                if (req.body.decision == undefined){
+                    res.json({
+                        result: 0,
+                        error: 'Not enough request'
+                    });
+                    return;
+                }
+
                 const inputDecision = req.body.decision;
                 const branchStoryNum = progress.branches[nowPage.number - 1].storyNumber;
                 const nextPage = pageAfterBranch(nowPage, branchStoryNum);

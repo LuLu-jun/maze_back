@@ -31,6 +31,16 @@ router.get('/:id/:pwd', function(req, res, next) {
 
 router.post('/:id/:pwd', function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)){
+        if (req.body.classNum == undefined || req.body.id == undefined || req.body.pwd == undefined
+        || req.body.classType == undefined || req.body.problemType == undefined
+        || req.body.hintCodes[0] == undefined || req.body.hintCodes[1] == undefined || req.body.hintCodes[2] == undefined){
+            res.json({
+                result: 0,
+                error: 'Not enough request'
+            });
+            return;
+        }
+
         var member = new Member();
         member.classNum = req.body.classNum;
         member.id = req.body.id;

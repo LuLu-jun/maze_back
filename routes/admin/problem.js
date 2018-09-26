@@ -56,6 +56,16 @@ router.get('/:id/:pwd', function(req, res){
 
 router.post('/:id/:pwd', upload.single('file'), function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
+        if (req.body.num == undefined || req.body.answer == undefined || req.body.classType == undefined
+        || req.body.problemType == undefined || req.body.hint1 == undefined || req.body.hint2 == undefined
+        || req.body.hint3 == undefined || req.file.filename == undefined || req.file.path == undefined){
+            res.json({
+                result: 0,
+                error: 'Not enough request'
+            });
+            return;
+        }
+
         var problem = new Problem();
         problem.num = Number(req.body.num);
         problem.answer = req.body.answer;

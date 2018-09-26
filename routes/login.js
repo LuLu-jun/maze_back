@@ -44,6 +44,14 @@ function validateAndGetProgress(id, pwd, next){
 }
 
 router.post('/', function(req, res, next){
+    if (req.body.id == undefined || req.body.pwd == undefined){
+        res.json({
+            result: 0,
+            error: 'Not enough request'
+        });
+        return;
+    }
+
     if (validateAdmin(req.body.id, req.body.pwd)){
         res.json({
             result: 1,

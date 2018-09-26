@@ -56,6 +56,15 @@ router.get('/:id/:pwd', function(req, res){
 
 router.post('/:id/:pwd', upload.single('file'), function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
+        if (req.body.num == undefined || req.body.classType == undefined || req.body.storyType == undefined
+        || req.file.filename == undefined || req.file.path == undefined){
+            res.json({
+                result: 0,
+                error: 'Not enough request'
+            });
+            return;
+        }
+
         var story = new Story();
         story.num = Number(req.body.num);
         story.classType = req.body.classType;
