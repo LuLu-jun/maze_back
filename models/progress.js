@@ -8,8 +8,8 @@ var progressSchema = new Schema({
     stories: { type: Array, required: true }, //save type for story number
     branches: { type: Array, required: true }, //save each branch's id
     recentPage: {
-        type: { type: String, enum: ['problem', 'story', 'branch'], required: true },
-        number: { type: Number, required: true }, //number means index of each type(problem. story, branch)
+        type: { type: String, enum: ['problem', 'story', 'branch', 'ending'], required: true },
+        number: { type: Number }, //number means index of each type(problem. story, branch)
     }
 });
 

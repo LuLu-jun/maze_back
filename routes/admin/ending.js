@@ -16,7 +16,7 @@ function deleteFile(filePath){
 const upload = multer({
     storage: multer.diskStorage({
         destination: function (req, file, cb){
-            cb(null, './public/branch');
+            cb(null, './public/ending');
         },
         filename: function (req, file, cb){
             crypto.pseudoRandomBytes(16, function (err, raw){
@@ -27,13 +27,13 @@ const upload = multer({
     }),
 });
 
-var Branch = require('../../models/branch');
+var Ending = require('../../models/ending');
 var validateAdmin = require('../login').validateAdmin;
 
 router.get('/:id/:pwd', function(req, res){
-    if (validateAdmin(req.params.id, req.params.pwd)){
-        Branch.find({}).sort({classType: 1, beforeStory: 1}).exec(function(err, branches) {
-            if (err){
+    if (validateAdmin(req.params.id, req.params.pwd)) {
+        Ending.find({}).sort({classType: 1}).exec(function (err, endings) {
+            if (err) {
                 //console.error(err);
                 res.json({
                     result: 0,
@@ -43,7 +43,7 @@ router.get('/:id/:pwd', function(req, res){
             }
             res.json({
                 result: 1,
-                branches: branches
+                endings: endings
             });
         });
         return;
@@ -55,38 +55,34 @@ router.get('/:id/:pwd', function(req, res){
 });
 
 router.post('/:id/:pwd', upload.single('file'), function(req, res){
-   if (validateAdmin(req.params.id, req.params.pwd)){
-       if (req.body.classType == undefined || req.body.beforeStory == undefined || req.body.yesStory == undefined
-           || req.body.noStory == undefined || req.file.filename == undefined || req.file.path == undefined){
-           res.json({
-               result: 0,
-               error: 'Not enough request'
-           });
-           return;
-       }
+    if (validateAdmin(req.params.id, req.params.pwd)) {
+        if (req.body.classType == undefined || req.file.filename == undefined || req.file.path == undefined){
+            res.json({
+                result: 0,
+                error: 'Not enough request'
+            });
+            return;
+        }
 
-       var branch = new Branch();
-       branch.classType = req.body.classType;
-       branch.beforeStory = req.body.beforeStory;
-       branch.yesStory = req.body.yesStory;
-       branch.noStory = req.body.noStory;
-       branch.fileURL = '/images/branch/' + req.file.filename;
-       branch.filePath = req.file.path;
+        var ending = new Ending();
+        ending.classType = req.body.classType;
+        ending.fileURL = '/images/ending/' + req.file.filename;
+        ending.filePath = req.file.path;
 
-       branch.save(function (err){
-           if (err) {
-               //console.error(err);
-               deleteFile(req.file.path);
-               res.json({
-                   result: 0,
-                   error: err.errmsg
-               });
-               return;
-           }
-           res.json({result: 1});
-       });
-       return;
-   }
+        ending.save(function (err) {
+            if (err) {
+                //console.error(err);
+                deleteFile(req.file.path);
+                res.json({
+                    result: 0,
+                    error: err.errmsg
+                });
+                return;
+            }
+            res.json({result: 1});
+        });
+        return;
+    }
     deleteFile(req.file.path);
     res.json({
         result: 0,
@@ -96,9 +92,9 @@ router.post('/:id/:pwd', upload.single('file'), function(req, res){
 
 router.delete('/:id/:pwd/:fileName', function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
-        const fileURL = "/images/branch/" + req.params.fileName;
+        const fileURL = "/images/ending/" + req.params.fileName;
 
-        Branch.findOneAndDelete({fileURL: fileURL},
+        Ending.findOneAndDelete({fileURL: fileURL},
             function (err, doc) {
                 deleteFile(doc.filePath);
                 if (err) {
