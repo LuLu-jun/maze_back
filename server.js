@@ -38,7 +38,7 @@ app.use(function(req, res, next) {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use('/images', express.static('public'));
+app.use('/images', express.static('./public'));
 app.use('/api/login', loginRouter);
 app.use('/api/admin/member', adminMemberRouter);
 app.use('/api/admin/problem', adminProblemRouter);
@@ -53,6 +53,7 @@ app.use('/api/problem', problemRouter);
 app.use('/api/branch', branchRouter);
 app.use('/api/ending', endingRouter);
 app.use('/api/time', timeRouter);
+app.use('/',express.static('../maze_front/build'));
 
 var port = process.env.PORT || 19191;
 
