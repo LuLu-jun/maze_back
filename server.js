@@ -2,6 +2,7 @@ var express     = require('express');
 var app         = express();
 var bodyParser  = require('body-parser');
 var mongoose    = require('mongoose');
+var path        = require('path');
 
 // CONNECT TO MONGODB SERVER
 var db = mongoose.connection;
@@ -53,9 +54,12 @@ app.use('/api/problem', problemRouter);
 app.use('/api/branch', branchRouter);
 app.use('/api/ending', endingRouter);
 app.use('/api/time', timeRouter);
-app.use('/',express.static('../maze_front/build'));
+app.use('/', express.static('../maze_front/build'));
+app.get('*', function (request, response){
+  response.sendFile(path.resolve(__dirname, '../maze_front/build', 'index.html'))
+})
 
-var port = process.env.PORT || 19191;
+var port = process.env.PORT || 80;
 
 var server = app.listen(port, function(){
  console.log("Express server has started on port " + port)
