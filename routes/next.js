@@ -35,21 +35,23 @@ function compareAnswer(num, classType, problemType, inputAnswer, next){
     Problem.find({ num: num, classType: classType })
         .exec(function(err, problem){ // 0: right, 1: wrong, 2: warning
             if (err) { next(1); }
-            else if (problem.length != 2) { next(1); }
+            // else if (problem.length != 2) { next(1); }
             else{
-                var myTypeAnswer = undefined, otherTypeAnswer = undefined;
-                if (problem[0].problemType == problemType){
-                    myTypeAnswer = problem[0].answer;
-                    otherTypeAnswer = problem[1].answer;
+                let retVal = 1;
+                for (let idx in problem) {
+                  if(problem[idx].answer == inputAnswer){
+                    if(problem[idx].problemType == problemType){
+                      retVal = 0;
+                    }
+                    else if (retVal != 0){
+                      retVal = 2;
+                    }
+                  }
                 }
-                else{
-                    myTypeAnswer = problem[1].answer;
-                    otherTypeAnswer = problem[0].answer;
-                }
-
-                if (myTypeAnswer == inputAnswer){ next(0); }
-                else if(otherTypeAnswer == inputAnswer){ next(2); }
-                else{ next(1); }
+                // 2019 세 타입 모두 틀린 경우 초기값 그대로 1
+                // 자기 타입의 답을 입력한 경우 무조건 0으로 설정
+                // 다른 타입의 답을 입력한 경우 이미 자신의 타입에서 정답이 확인된 경우를 제외하고 2로 설정
+                next(retVal);
             }
         });
 }
@@ -69,9 +71,10 @@ function pageAfterStory(page, classType, next){
                 console.error(err);
                 return;
             }
-            if (page.number == count/2){
-                nextPage.type = 'ending';
-            }
+            // if (page.number == count/2){
+            //     nextPage.type = 'ending';
+            // }
+            if(false){}
             else{
                 nextPage.type = 'problem';
                 nextPage.number = page.number;
@@ -82,23 +85,27 @@ function pageAfterStory(page, classType, next){
     }
 }
 
-function pageAfterProblem(page, beforeStoryType, classType, next){
+function pageAfterProblem(page, beforeStoryType, classType, problemType, next){
     var nextPage = { type: undefined, number: undefined, id: undefined };
     if (page.type == 'problem'){
-        Problem.countDocuments({ classType: classType }, function(err, count){
+        Problem.countDocuments({ classType: classType, problemType: problemType }, function(err, count){
             if (err){
                 console.error(err);
                 return;
             }
-            if (page.number == count/2){
-                nextPage.type = 'story';
-                nextPage.number = page.number;
-                next(nextPage);
-            }
-            else if (page.number == count/2 - 1 && checkTime()){
-                nextPage.type = 'problem';
-                nextPage.number = page.number + 1;
-                next(nextPage);
+            // if (page.number == count/2){
+            //     nextPage.type = 'story';
+            //     nextPage.number = page.number;
+            //     next(nextPage);
+            // }
+            // else if (page.number == count/2 - 1 && checkTime()){
+            //     nextPage.type = 'problem';
+            //     nextPage.number = page.number + 1;
+            //     next(nextPage);
+            // }
+            if(page.number == count){
+              nextPage.type='ending'
+              next(nextPage);
             }
             else{
                 const beforeStory = page.number.toString() + "(" + beforeStoryType.toString() + ")";
@@ -368,7 +375,7 @@ router.post('/:id/:pwd', function(req, res){
                             }
                             progress.problems[nowPage.number - 1].end = new Date().getTime();
 
-                            pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function (nextPage){
+                            pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, member.problemType, function (nextPage){
                                 if (nextPage.type == 'story'){
                                     progress.recentPage = nextPage;
                                     progress.stories[nextPage.number - 1] = progress.stories[nextPage.number - 2];

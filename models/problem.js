@@ -27,7 +27,7 @@ function classTypeConstraint(val){
 }
 
 function problemTypeConstraint(val){
-    return (val==="가" || val==="나");
+    return (val==="A" || val==="B" || val==='C');
 }
 
 function hintsConstraint(val) {
