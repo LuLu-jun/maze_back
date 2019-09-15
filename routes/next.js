@@ -293,7 +293,7 @@ router.post('/:id/:pwd', function(req, res){
                         }
 
                         updateProgressHint3(progress, req.body.number);
-                        getHint3(nowPage.number, member.classType, member.problemType[nowPage.number - 1], function(hint){
+                        getHint3(nowPage.number, member.classType, member.problemType, function(hint){
                             if (hint == false) {
                                 res.json({
                                     result: 0,
@@ -311,7 +311,7 @@ router.post('/:id/:pwd', function(req, res){
                     return;
                 }
 
-                compareAnswer(nowPage.number, member.classType, member.problemType[nowPage.number - 1], req.body.answer,
+                compareAnswer(nowPage.number, member.classType, member.problemType, req.body.answer,
                     function(result){
                         if (result == 1){
                             res.json({
@@ -334,9 +334,6 @@ router.post('/:id/:pwd', function(req, res){
                         }
                         else{
                             if (progress.problems[nowPage.number - 1].end != -1){ //visited problem
-                                pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function(nextPage){
-                                    if (nextPage.type == 'story') {
-                                        res.json({
                                             result: 1,
                                             nextPage: nextPage
                                         });
@@ -619,7 +616,7 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
             }
 
             var hints = [undefined, undefined, undefined];
-            getHints(0, problemNum, member.classType, member.problemType[problemNum - 1], progressHints, hints,
+            getHints(0, problemNum, member.classType, member.problemType, progressHints, hints,
                 function (hints){
                     if (hints != false) {
                         res.json({
