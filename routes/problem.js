@@ -29,7 +29,7 @@ router.get('/:id/:pwd/:number', function(req, res, next){
             }
 
             const problemNum = Number(req.params.number);
-            Problem.find({ num: problemNum, classType: member.classType, problemType: member.problemType[problemNum - 1] })
+            Problem.find({ num: problemNum, classType: member.classType, problemType: member.problemType })
                 .exec(function(err, problem){
                     if (err){
                         res.json({
