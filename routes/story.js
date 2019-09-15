@@ -45,9 +45,17 @@ router.get('/:id/:pwd/:number', function (req, res, next){
                         });
                     }
                     else{
+                        let begin = (new Date().getTime());
+                        if (progress.problems[Number(req.params.number) - 2]){
+                          begin = progress.problems[Number(req.params.number) - 2].end
+                        }
+                        let end = progress.problems[Number(req.params.number) - 1].begin;
+                        if (end == -1) end=undefined;
                         res.json({
                             result: 1,
-                            imageURL: story[0].fileURL
+                            imageURL: story[0].fileURL,
+                            begin: begin,
+                            end: end,
                         });
                     }
                 });
