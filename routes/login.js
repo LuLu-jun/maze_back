@@ -5,10 +5,13 @@ var Member = require('../models/member');
 var Progress = require('../models/progress');
 
 function validateAdmin(id, pwd){
-    if (id == 'admin' && pwd == 'admin195828') {
-        return true;
-    }
-    return false;
+    // if (id == 'admin' && pwd == 'admin') {
+    //     return true;
+    // }
+    // return false;
+    validateUser(id, pwd, (res, admin)=>{
+      return admin
+    })
 }
 
 function validateUser(id, pwd, next){
@@ -16,14 +19,18 @@ function validateUser(id, pwd, next){
     Member.find({ id: id , pwd: pwd }).exec(function(err, member){
         if (err){
             //console.error(err);
-            next(false);
+            next(false, false);
             return;
         }
         if (member.length != 1) {
-            next(false);
+            next(false, false);
             return;
         }
-        next(true);
+        if (id == 'admin'){
+          next(true, true);
+          return;
+        }
+        next(true, false);
     });
 }
 
@@ -52,20 +59,12 @@ router.post('/', function(req, res, next){
         return;
     }
 
-    if (validateAdmin(req.body.id, req.body.pwd)){
-        res.json({
-            result: 1,
-            isAdmin: true,
-            // TODO : get recent page
-        });
-        return;
-    }
     validateUser(req.body.id, req.body.pwd,
-        function (result){
+        function (result, admin){
             if (result){
                 res.json({
                     result: 1,
-                    isAdmin: false,
+                    isAdmin: admin,
                     recentPage: -1,
                 });
                 return;
