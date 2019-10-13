@@ -13,6 +13,8 @@ function allowPage(requestPage, progress){
     const type = requestPage.type;
     const number = requestPage.number;
 
+    console.log(type, progress.recentPage.type);
+
     if (type == 'problem'){
         if (progress.problems[number - 1].begin == -1) { return false; }
         return true;
@@ -35,21 +37,23 @@ function compareAnswer(num, classType, problemType, inputAnswer, next){
     Problem.find({ num: num, classType: classType })
         .exec(function(err, problem){ // 0: right, 1: wrong, 2: warning
             if (err) { next(1); }
-            else if (problem.length != 2) { next(1); }
+            // else if (problem.length != 2) { next(1); }
             else{
-                var myTypeAnswer = undefined, otherTypeAnswer = undefined;
-                if (problem[0].problemType == problemType){
-                    myTypeAnswer = problem[0].answer;
-                    otherTypeAnswer = problem[1].answer;
+                let retVal = 1;
+                for (let idx in problem) {
+                  if(problem[idx].answer == inputAnswer){
+                    if(problem[idx].problemType == problemType){
+                      retVal = 0;
+                    }
+                    else if (retVal != 0){
+                      retVal = 2;
+                    }
+                  }
                 }
-                else{
-                    myTypeAnswer = problem[1].answer;
-                    otherTypeAnswer = problem[0].answer;
-                }
-
-                if (myTypeAnswer == inputAnswer){ next(0); }
-                else if(otherTypeAnswer == inputAnswer){ next(2); }
-                else{ next(1); }
+                // 2019 세 타입 모두 틀린 경우 초기값 그대로 1
+                // 자기 타입의 답을 입력한 경우 무조건 0으로 설정
+                // 다른 타입의 답을 입력한 경우 이미 자신의 타입에서 정답이 확인된 경우를 제외하고 2로 설정
+                next(retVal);
             }
         });
 }
@@ -69,9 +73,10 @@ function pageAfterStory(page, classType, next){
                 console.error(err);
                 return;
             }
-            if (page.number == count/2){
-                nextPage.type = 'ending';
-            }
+            // if (page.number == count/2){
+            //     nextPage.type = 'ending';
+            // }
+            if(false){}
             else{
                 nextPage.type = 'problem';
                 nextPage.number = page.number;
@@ -82,23 +87,27 @@ function pageAfterStory(page, classType, next){
     }
 }
 
-function pageAfterProblem(page, beforeStoryType, classType, next){
+function pageAfterProblem(page, beforeStoryType, classType, problemType, next){
     var nextPage = { type: undefined, number: undefined, id: undefined };
     if (page.type == 'problem'){
-        Problem.countDocuments({ classType: classType }, function(err, count){
+        Problem.countDocuments({ classType: classType, problemType: problemType }, function(err, count){
             if (err){
                 console.error(err);
                 return;
             }
-            if (page.number == count/2){
-                nextPage.type = 'story';
-                nextPage.number = page.number;
-                next(nextPage);
-            }
-            else if (page.number == count/2 - 1 && checkTime()){
-                nextPage.type = 'problem';
-                nextPage.number = page.number + 1;
-                next(nextPage);
+            // if (page.number == count/2){
+            //     nextPage.type = 'story';
+            //     nextPage.number = page.number;
+            //     next(nextPage);
+            // }
+            // else if (page.number == count/2 - 1 && checkTime()){
+            //     nextPage.type = 'problem';
+            //     nextPage.number = page.number + 1;
+            //     next(nextPage);
+            // }
+            if(page.number == count){
+              nextPage.type='ending'
+              next(nextPage);
             }
             else{
                 const beforeStory = page.number.toString() + "(" + beforeStoryType.toString() + ")";
@@ -293,7 +302,7 @@ router.post('/:id/:pwd', function(req, res){
                         }
 
                         updateProgressHint3(progress, req.body.number);
-                        getHint3(nowPage.number, member.classType, member.problemType[nowPage.number - 1], function(hint){
+                        getHint3(nowPage.number, member.classType, member.problemType, function(hint){
                             if (hint == false) {
                                 res.json({
                                     result: 0,
@@ -311,7 +320,7 @@ router.post('/:id/:pwd', function(req, res){
                     return;
                 }
 
-                compareAnswer(nowPage.number, member.classType, member.problemType[nowPage.number - 1], req.body.answer,
+                compareAnswer(nowPage.number, member.classType, member.problemType, req.body.answer,
                     function(result){
                         if (result == 1){
                             res.json({
@@ -334,62 +343,69 @@ router.post('/:id/:pwd', function(req, res){
                         }
                         else{
                             if (progress.problems[nowPage.number - 1].end != -1){ //visited problem
-                                pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function(nextPage){
-                                    if (nextPage.type == 'story') {
-                                        res.json({
-                                            result: 1,
-                                            nextPage: nextPage
-                                        });
-                                    }
-                                    else if(nextPage.type == 'problem'){
-                                        res.json({
-                                            result: 1,
-                                            nextPage: nextPage
-                                        });
-                                    }
-                                    else{
-                                        for (var i=0; i<progress.branches.length; i++){
-                                            if (progress.branches[i].storyNumber == nowPage.number + 0.5){
-                                                nextPage.number = i + 1;
-                                                res.json({
-                                                    result: 1,
-                                                    nextPage: nextPage
-                                                });
-                                                break;
-                                            }
-                                        }
-
-                                        if (nextPage.number == undefined){ // last problem visited and no branch past
-                                            res.json({
-                                                result: 1,
-                                                nextPage: { type: 'problem', number: nowPage.number + 1 }
-                                            });
-                                        }
-                                    }
+                                pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, member.problemType, function(nextPage){
+                                    // if (nextPage.type == 'story') {
+                                    //     res.json({
+                                    //         result: 1,
+                                    //         nextPage: nextPage
+                                    //     });
+                                    // }
+                                    // else if(nextPage.type == 'problem'){
+                                    //     res.json({
+                                    //         result: 1,
+                                    //         nextPage: nextPage
+                                    //     });
+                                    // }
+                                    // else{
+                                    //     for (var i=0; i<progress.branches.length; i++){
+                                    //         if (progress.branches[i].storyNumber == nowPage.number + 0.5){
+                                    //             nextPage.number = i + 1;
+                                    //             res.json({
+                                    //                 result: 1,
+                                    //                 nextPage: nextPage
+                                    //             });
+                                    //             break;
+                                    //         }
+                                    //     }
+                                    //
+                                    //     if (nextPage.number == undefined){ // last problem visited and no branch past
+                                    //         res.json({
+                                    //             result: 1,
+                                    //             nextPage: { type: 'problem', number: nowPage.number + 1 }
+                                    //         });
+                                    //     }
+                                    // }
+                                    res.json({
+                                        result: 1,
+                                        nextPage: nextPage
+                                    });
                                 });
                                 return;
                             }
                             progress.problems[nowPage.number - 1].end = new Date().getTime();
 
-                            pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, function (nextPage){
+                            pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, member.problemType, function (nextPage){
                                 if (nextPage.type == 'story'){
                                     progress.recentPage = nextPage;
                                     progress.stories[nextPage.number - 1] = progress.stories[nextPage.number - 2];
                                 }
-                                else if(nextPage.type == 'problem'){
-                                    progress.recentPage = nextPage;
-                                    progress.problems[nextPage.number - 1].begin = new Date().getTime();
-                                }
-                                else{ //next Page is branch
-                                    for (var i=0; i<progress.branches.length; i++){
-                                        if (progress.branches[i].storyNumber == -1){
-                                            progress.branches[i] = { id: nextPage.id, storyNumber: nowPage.number + 0.5 };
-                                            progress.recentPage = { type: 'branch', number: i+1 };
-                                            nextPage.number = i + 1;
-                                            break;
-                                        }
-                                    }
-                                }
+                                // else if(nextPage.type == 'problem'){
+                                //     progress.recentPage = nextPage;
+                                //     progress.problems[nextPage.number - 1].begin = new Date().getTime();
+                                // }
+                                // else{ //next Page is branch
+                                //     for (var i=0; i<progress.branches.length; i++){
+                                //         if (progress.branches[i].storyNumber == -1){
+                                //             progress.branches[i] = { id: nextPage.id, storyNumber: nowPage.number + 0.5 };
+                                //             progress.recentPage = { type: 'branch', number: i+1 };
+                                //             nextPage.number = i + 1;
+                                //             break;
+                                //         }
+                                //     }
+                                // }
+                                progress.recentPage = nextPage;
+                                // 2019 currently, all patterns are story -> problem -> story -> ... -> problem -> ending
+                                // if problem -> problem exists, progress.problems[nextPage.number - 1].begin = new Date().getTime(); have to be in code for next problem
                                 Progress.update({ _id: progress._id }, { $set: progress }, function(err, output){
                                     if (err){
                                         console.error(err);
@@ -619,7 +635,7 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
             }
 
             var hints = [undefined, undefined, undefined];
-            getHints(0, problemNum, member.classType, member.problemType[problemNum - 1], progressHints, hints,
+            getHints(0, problemNum, member.classType, member.problemType, progressHints, hints,
                 function (hints){
                     if (hints != false) {
                         res.json({

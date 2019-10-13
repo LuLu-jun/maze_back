@@ -8,7 +8,10 @@ var fs = require('fs');
 function deleteFile(filePath){
     fs.exists(filePath, function (exists) {
         if (exists) {
-            fs.unlink(filePath);
+            fs.unlink(filePath, function (err) { 
+                if (err) throw err; 
+                console.log('successfully deleted'); 
+            });
         }
     });
 }
