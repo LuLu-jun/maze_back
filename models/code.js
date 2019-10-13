@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var problemSchema = new Schema({
+var codeSchema = new Schema({
     num: { type: Number, required: true },
     answer: { type: String, required: true },
     classType: {
@@ -34,4 +34,4 @@ function hintsConstraint(val) {
     return val.length == 3;
 }
 
-module.exports = mongoose.model('problem', problemSchema);
+module.exports = mongoose.model('code', codeSchema);

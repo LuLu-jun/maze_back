@@ -9,7 +9,7 @@ router.get('/:id/:pwd', function(req, res, next) {
     if (validateAdmin(req.params.id, req.params.pwd)){
         Member.find({}).sort({classNum: 1}).exec(function(err, members){
             if(err){
-                //console.error(err);
+                // console.error(err);
                 res.json({
                     result: 0,
                     error: err.errmsg

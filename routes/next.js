@@ -13,6 +13,8 @@ function allowPage(requestPage, progress){
     const type = requestPage.type;
     const number = requestPage.number;
 
+    console.log(type, progress.recentPage.type);
+
     if (type == 'problem'){
         if (progress.problems[number - 1].begin == -1) { return false; }
         return true;
@@ -380,20 +382,23 @@ router.post('/:id/:pwd', function(req, res){
                                     progress.recentPage = nextPage;
                                     progress.stories[nextPage.number - 1] = progress.stories[nextPage.number - 2];
                                 }
-                                else if(nextPage.type == 'problem'){
-                                    progress.recentPage = nextPage;
-                                    progress.problems[nextPage.number - 1].begin = new Date().getTime();
-                                }
-                                else{ //next Page is branch
-                                    for (var i=0; i<progress.branches.length; i++){
-                                        if (progress.branches[i].storyNumber == -1){
-                                            progress.branches[i] = { id: nextPage.id, storyNumber: nowPage.number + 0.5 };
-                                            progress.recentPage = { type: 'branch', number: i+1 };
-                                            nextPage.number = i + 1;
-                                            break;
-                                        }
-                                    }
-                                }
+                                // else if(nextPage.type == 'problem'){
+                                //     progress.recentPage = nextPage;
+                                //     progress.problems[nextPage.number - 1].begin = new Date().getTime();
+                                // }
+                                // else{ //next Page is branch
+                                //     for (var i=0; i<progress.branches.length; i++){
+                                //         if (progress.branches[i].storyNumber == -1){
+                                //             progress.branches[i] = { id: nextPage.id, storyNumber: nowPage.number + 0.5 };
+                                //             progress.recentPage = { type: 'branch', number: i+1 };
+                                //             nextPage.number = i + 1;
+                                //             break;
+                                //         }
+                                //     }
+                                // }
+                                progress.recentPage = nextPage;
+                                // 2019 currently, all patterns are story -> problem -> story -> ... -> problem -> ending
+                                // if problem -> problem exists, progress.problems[nextPage.number - 1].begin = new Date().getTime(); have to be in code for next problem
                                 Progress.update({ _id: progress._id }, { $set: progress }, function(err, output){
                                     if (err){
                                         console.error(err);
