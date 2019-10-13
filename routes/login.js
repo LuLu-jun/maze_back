@@ -4,33 +4,29 @@ var router = express.Router();
 var Member = require('../models/member');
 var Progress = require('../models/progress');
 
-function validateAdmin(id, pwd){
-    // if (id == 'admin' && pwd == 'admin') {
-    //     return true;
-    // }
-    // return false;
-    validateUser(id, pwd, (res, admin)=>{
-      return admin
-    })
+async function validateAdmin(id, pwd){
+    const admin = await validateUser(id, pwd, ()=>{});
+    return admin;
 }
 
 function validateUser(id, pwd, next){
     var result = undefined;
     Member.find({ id: id , pwd: pwd }).exec(function(err, member){
         if (err){
-            //console.error(err);
+            console.error(err);
             next(false, false);
-            return;
+            return false;
         }
         if (member.length != 1) {
             next(false, false);
-            return;
+            return false;
         }
         if (id == 'admin'){
           next(true, true);
-          return;
+          return true;
         }
         next(true, false);
+        return false;
     });
 }
 
