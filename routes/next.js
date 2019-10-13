@@ -343,35 +343,42 @@ router.post('/:id/:pwd', function(req, res){
                         }
                         else{
                             if (progress.problems[nowPage.number - 1].end != -1){ //visited problem
-                                            result: 1,
-                                            nextPage: nextPage
-                                        });
-                                    }
-                                    else if(nextPage.type == 'problem'){
-                                        res.json({
-                                            result: 1,
-                                            nextPage: nextPage
-                                        });
-                                    }
-                                    else{
-                                        for (var i=0; i<progress.branches.length; i++){
-                                            if (progress.branches[i].storyNumber == nowPage.number + 0.5){
-                                                nextPage.number = i + 1;
-                                                res.json({
-                                                    result: 1,
-                                                    nextPage: nextPage
-                                                });
-                                                break;
-                                            }
-                                        }
-
-                                        if (nextPage.number == undefined){ // last problem visited and no branch past
-                                            res.json({
-                                                result: 1,
-                                                nextPage: { type: 'problem', number: nowPage.number + 1 }
-                                            });
-                                        }
-                                    }
+                                pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, member.problemType, function(nextPage){
+                                    // if (nextPage.type == 'story') {
+                                    //     res.json({
+                                    //         result: 1,
+                                    //         nextPage: nextPage
+                                    //     });
+                                    // }
+                                    // else if(nextPage.type == 'problem'){
+                                    //     res.json({
+                                    //         result: 1,
+                                    //         nextPage: nextPage
+                                    //     });
+                                    // }
+                                    // else{
+                                    //     for (var i=0; i<progress.branches.length; i++){
+                                    //         if (progress.branches[i].storyNumber == nowPage.number + 0.5){
+                                    //             nextPage.number = i + 1;
+                                    //             res.json({
+                                    //                 result: 1,
+                                    //                 nextPage: nextPage
+                                    //             });
+                                    //             break;
+                                    //         }
+                                    //     }
+                                    //
+                                    //     if (nextPage.number == undefined){ // last problem visited and no branch past
+                                    //         res.json({
+                                    //             result: 1,
+                                    //             nextPage: { type: 'problem', number: nowPage.number + 1 }
+                                    //         });
+                                    //     }
+                                    // }
+                                    res.json({
+                                        result: 1,
+                                        nextPage: nextPage
+                                    });
                                 });
                                 return;
                             }
