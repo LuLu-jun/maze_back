@@ -4,14 +4,14 @@ var router = express.Router();
 var Member = require('../models/member');
 var Progress = require('../models/progress');
 
-async function validateAdmin(id, pwd){
+function validateAdmin(id, pwd){
     // if (id == 'admin' && pwd == 'admin') {
     //     return true;
     // }
     // return false;
     validateUser(id, pwd, (res, admin)=>{
       return admin
-    })  
+    })
 }
 
 function validateUser(id, pwd, next){
