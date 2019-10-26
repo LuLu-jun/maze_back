@@ -20,7 +20,7 @@ var codeSchema = new Schema({
     filePath: { type: String, required: true, unique: true },
 });
 
-problemSchema.index({ num: 1, classType: 1, problemType: 1 }, { unique: true });
+//problemSchema.index({ num: 1, classType: 1, problemType: 1 }, { unique: true });
 
 function classTypeConstraint(val){
     return (val==="전기" || val==="후기");
