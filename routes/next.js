@@ -157,6 +157,20 @@ function pageAfterBranch(page, branchStoryNum){
 }
 
 function pageAfterCode(page, next){
+    var nextPage = { type: undefined, number: undefined};
+    console.log(page);
+    if (page.type == 'code'){
+        if(page.number == 1){ 
+            nextPage.type = 'story';
+            nextPage.number = 4;
+        }
+        if(page.number == 2){
+            nextPage.type = 'story';
+            nextPage.number = 7;
+        }
+        console.log(nextPage);
+        next(nextPage);
+    }
 }
 
 function extractType(str){
@@ -484,9 +498,9 @@ router.post('/:id/:pwd', function(req, res){
                                 if (output.n != 1) { console.error('Number of matched progress is not 1 !!'); }
                             });
                         } else{ //result = 0
-                            
                             pageAfterCode(nowPage, function (nextPage){
-
+                                console.log(nextPage);
+                                
                                 progress.recentPage = nextPage;
                                 // 2019 currently, all patterns are story -> problem -> story -> ... -> problem -> ending
                                 // if problem -> problem exists, progress.problems[nextPage.number - 1].begin = new Date().getTime(); have to be in code for next problem
@@ -511,7 +525,11 @@ router.post('/:id/:pwd', function(req, res){
                                         result: 1,
                                         nextPage: nextPage
                                     });
-                                });
+                                });/*
+                                res.json({
+                                    result: 1,
+                                    nextPage: nextPage
+                                });*/
                             });
                         }
                     });
