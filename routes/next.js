@@ -172,26 +172,15 @@ function getHint3(num, classType, problemType, next){
         });
 }
 
-function getHints(index, problemNum, classType, problemType, hintBool, hints, next){
-    if (index >= 3){ // end
-        next(hints);
-    }
-    else{
-        if (hintBool[index] == true){
-            Problem.find({ num: problemNum, classType: classType, problemType: problemType })
-                .exec(function(err, problem){
-                    if (err) { next(false); }
-                    else if (problem.length != 1) { next(false); }
-                    else{
-                        hints[index] = problem[0].hints[index];
-                        getHints(index + 1, problemNum, classType, problemType, hintBool, hints, next);
-                    }
-                });
-        }
+function getHints(problemNum, classType, problemType, next){
+    Problem.find({ num: problemNum, classType: classType, problemType: problemType })
+    .exec(function(err, problem){
+        if (err) { next(false); }
+        else if (problem.length != 1) { next(false); }
         else{
-            getHints(index + 1, problemNum, classType, problemType, hintBool, hints, next);
+            next(problem[0].hints);
         }
-    }
+    });
 }
 
 router.post('/:id/:pwd', function(req, res){
@@ -616,26 +605,8 @@ router.get('/hint/:id/:pwd/:number', function(req, res){
             }
 
             var problemNum = req.params.number;
-            if (progress.problems[problemNum - 1].end == -1) {
-                var timeDiff = Math.ceil((new Date().getTime() - progress.problems[problemNum - 1].begin) / 1000);
-            }
-            else{
-                var timeDiff = Math.ceil((progress.problems[problemNum - 1].end - progress.problems[problemNum - 1].begin) / 1000);
-            }
-            var progressHints = progress.problems[problemNum - 1].hints;
 
-            if (timeDiff >= firstHintTime && !progressHints[0]) { //need update progress hint
-                progress.problems[problemNum - 1].hints[0] = true;
-                progressHints[0] = true;
-            }
-
-            if (timeDiff >= secondHintTime && !progressHints[1]) {
-                progress.problems[problemNum - 1].hints[1] = true;
-                progressHints[1] = true;
-            }
-
-            var hints = [undefined, undefined, undefined];
-            getHints(0, problemNum, member.classType, member.problemType, progressHints, hints,
+            getHints(problemNum, member.classType, member.problemType,
                 function (hints){
                     if (hints != false) {
                         res.json({

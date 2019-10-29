@@ -13,8 +13,7 @@ var problemSchema = new Schema({
         validate: [problemTypeConstraint, 'Error : problem type is not valid']
     },
     hints: {
-        type: Array, required: true,
-        validate: [hintsConstraint, 'Number of hint is not valid']
+        type: Array, required: true
     },
     fileURL: { type: String, required: true, unique: true },
     filePath: { type: String, required: true, unique: true },
@@ -30,8 +29,5 @@ function problemTypeConstraint(val){
     return (val==="A" || val==="B" || val==='C');
 }
 
-function hintsConstraint(val) {
-    return val.length == 3;
-}
 
 module.exports = mongoose.model('problem', problemSchema);
