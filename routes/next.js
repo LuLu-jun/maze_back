@@ -88,7 +88,7 @@ function pageAfterStory(page, classType, next){
 }
 
 function pageAfterProblem(page, beforeStoryType, classType, problemType, next){
-    var nextPage = { type: undefined, number: undefined, id: undefined };
+    var nextPage = { type: undefined, number: "", id: undefined };
     if (page.type == 'problem'){
         Problem.countDocuments({ classType: classType, problemType: problemType }, function(err, count){
             if (err){
