@@ -78,6 +78,10 @@ router.get('/reset/:id/:pwd', function(req, res, next){
                         { id: "", storyNumber: -1 }
                     );
                 }
+                progress.codes = [];
+                for (var j=0; j<2; j++) {
+                    progress.codes.push(-1);
+                }
 
                 progress.save(function (err) {
                     if (err) { error = err.errmsg; }
