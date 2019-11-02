@@ -60,8 +60,7 @@ router.get('/:id/:pwd', function(req, res){
 router.post('/:id/:pwd', upload.single('file'), function(req, res){
     if (validateAdmin(req.params.id, req.params.pwd)) {
         if (req.body.num == undefined || req.body.answer == undefined || req.body.classType == undefined
-        || req.body.problemType == undefined || req.body.hint1 == undefined || req.body.hint2 == undefined
-        || req.body.hint3 == undefined || req.file.filename == undefined || req.file.path == undefined){
+        || req.body.problemType == undefined || req.body.hints == undefined || req.file.filename == undefined || req.file.path == undefined){
             res.json({
                 result: 0,
                 error: 'Not enough request'
@@ -74,7 +73,7 @@ router.post('/:id/:pwd', upload.single('file'), function(req, res){
         problem.answer = req.body.answer;
         problem.classType = req.body.classType;
         problem.problemType = req.body.problemType;
-        problem.hints = new Array(req.body.hint1, req.body.hint2, req.body.hint3);
+        problem.hints = req.body.hints.split(',');
         problem.fileURL = '/images/problem/' + req.file.filename;
         problem.filePath = req.file.path;
 
