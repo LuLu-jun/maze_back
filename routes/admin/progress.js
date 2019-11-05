@@ -62,13 +62,13 @@ router.get('/reset/:id/:pwd', function(req, res, next){
                     number : 1
                 };
                 progress.problems = [];
-                for (var j=0; j<10; j++){
+                for (var j=0; j<11; j++){
                     progress.problems.push(
                         { begin: -1, end: -1, hints: [false, false, false] }
                     );
                 }
                 progress.stories = [];
-                for (var j=0; j<10; j++){
+                for (var j=0; j<11; j++){
                     progress.stories.push(-1);
                 }
                 progress.stories[0] = 1;

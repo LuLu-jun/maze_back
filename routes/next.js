@@ -14,7 +14,7 @@ function allowPage(requestPage, progress){
     const type = requestPage.type;
     const number = requestPage.number;
 
-    console.log(requestPage.type+requestPage.number+" "+progress.recentPage.type+progress.recentPage.number);
+    //console.log(requestPage.type+requestPage.number+" "+progress.recentPage.type+progress.recentPage.number);
 
     if (type == 'problem'){
         if (progress.problems[number - 1].begin == -1) { return false; }
@@ -63,13 +63,12 @@ function compareAnswer(num, classType, problemType, inputAnswer, next){
         });
 }
 
-function compareCode(num, inputAnswer, next){
+function compareCode(num, classNum, inputAnswer, next){
     Code.find({num: num})
         .exec(function(err, problem){
             if(err) next(1);
             else {
-                //console.log(problem[0].answer+inputAnswer);
-                if(problem[0].answer == inputAnswer) next(0);
+                if(problem[0].answer+classNum == inputAnswer) next(0);
                 else next(1);
             }
         });
@@ -114,6 +113,7 @@ function pageAfterProblem(page, beforeStoryType, classType, problemType, next){
             }
 
             if(page.number == count){
+                console.log(page.number+count);
               nextPage.type='ending'
               next(nextPage);
             }
@@ -227,7 +227,7 @@ function getHints(problemNum, classType, problemType, next){
 }
 
 router.post('/:id/:pwd', function(req, res){
-    console.log("next.js/post start!");
+    //console.log("next.js/post start!");
     validateAndGetProgress(req.params.id, req.params.pwd,
         function(progress, member){
             if (progress == undefined) {
@@ -378,7 +378,7 @@ router.post('/:id/:pwd', function(req, res){
                             });
                         }
                         else{
-                            console.log("problem"+nowPage.number+" correct");
+                            //console.log("problem"+nowPage.number+" correct");
                             if (progress.problems[nowPage.number - 1].end != -1){ //visited problem
                                 pageAfterProblem(nowPage, progress.stories[nowPage.number - 1], member.classType, member.problemType, function(nextPage){
                                     console.log("nextPage is "+nextPage.type+nextPage.number+"(visited)");
@@ -445,12 +445,12 @@ router.post('/:id/:pwd', function(req, res){
                     return;
                 }
 
-                compareCode(nowPage.number, req.body.answer, 
+                compareCode(nowPage.number, member.classNum, req.body.answer, 
                     function(result){
                         if(result==1) {
                             res.json({
                                 result: 0,
-                                error: 'wrong answer'
+                                error: 'wrong code'
                             });
                         } else if(result == 2){
                             res.json({

@@ -74,13 +74,13 @@ router.post('/:id/:pwd', function(req, res){
                 number : 1
             };
             progress.problems = [];
-            for (var i=0; i<10; i++){
-                progress.problems.push(
+            for (var i=0; i<11; i++){
+                progress.problems.push( 
                     { begin: -1, end: -1, hints: [false, false, false] }
                 );
             }
             progress.stories = [];
-            for (var i=0; i<10; i++){
+            for (var i=0; i<11; i++){
                 progress.stories.push(-1);
             }
             progress.stories[0] = 1;
