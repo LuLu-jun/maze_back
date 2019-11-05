@@ -73,7 +73,7 @@ router.post('/:id/:pwd', upload.single('file'), function(req, res){
         problem.answer = req.body.answer;
         problem.classType = req.body.classType;
         problem.problemType = req.body.problemType;
-        problem.hints = req.body.hints.split(',');
+        problem.hints = req.body.hints.split('/');
         problem.fileURL = '/images/problem/' + req.file.filename;
         problem.filePath = req.file.path;
 
