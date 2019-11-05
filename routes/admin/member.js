@@ -90,6 +90,10 @@ router.post('/:id/:pwd', function(req, res){
                     { id: "", storyNumber: -1 }
                 );
             }
+            progress.codes = [];
+            for (var i=0; i<2; i++) {
+                progress.codes.push(-1);
+            }
 
             progress.save(function(err){
                 if(err){
